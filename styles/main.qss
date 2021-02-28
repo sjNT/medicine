@@ -1,0 +1,44 @@
+QMainWindow{
+    background-color: #ffffff;
+}
+
+QLineEdit{
+    background: white;
+    padding: 1px;
+    border-style: solid;
+    border: 1px solid gray;
+    border-radius: 2px;
+}
+
+#ErrLabel{
+    font-size: 12px;
+    color: #b85042;
+}
+
+#MenuLabel{
+    font-size: 14px;
+    font-weight: 500;
+}
+QToolBar{
+    background: #F8F8FF;
+    spacing: 20px;
+}
+QToolButton{
+    font-size: 8pt;
+    width: 110px;
+    border-bottom: 1px solid black;
+}
+#DoctorLabel, #PatientLabel{
+    color: #696969;
+    font-size: 14pt;
+}
+#SubmitBtn{
+    background: #4169E1;
+    color: #ffffff;
+    font-size: 12pt;
+}
+#CleanBtn{
+    background: #800000;
+    color: #ffffff;
+    font-size: 12pt;
+}

@@ -1,0 +1,50 @@
+from const import proj_path
+from PySide2.QtGui import QIcon
+from PySide2.QtCore import QSize, Qt
+from PySide2.QtWidgets import QToolBar, QLabel, QAction, QToolButton
+
+
+class Menu(QToolBar):
+
+    def __init__(self):
+        QToolBar.__init__(self)
+        self.recordsLabel = QLabel('Записи')
+        self.recordsLabel.setObjectName('MenuLabel')
+        self.recordsLabel.setAlignment(Qt.AlignHCenter)
+        self.recordsLabel.setContentsMargins(0, 20, 0, 0)
+        self.doctorLabel = QLabel('Врачи')
+        self.doctorLabel.setObjectName('MenuLabel')
+        self.doctorLabel.setAlignment(Qt.AlignHCenter)
+        self.doctorLabel.setContentsMargins(0, 20, 0, 0)
+        self.patientLabel = QLabel('Пациенты')
+        self.patientLabel.setObjectName('MenuLabel')
+        self.patientLabel.setAlignment(Qt.AlignHCenter)
+        self.patientLabel.setContentsMargins(0, 20, 0, 0)
+        self.addRecordAction = QAction(QIcon(str(proj_path / 'images/048-medical report.png')), 'Запись пациента')
+        self.addRecordBtn = QToolButton()
+        self.addRecordBtn.setDefaultAction(self.addRecordAction)
+        self.addRecordBtn.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
+        self.viewRecordsAction = QAction(QIcon(str(proj_path / 'images/019-newspaper.png')), 'Просмотр записей')
+        self.viewRecordsBtn = QToolButton()
+        self.viewRecordsBtn.setDefaultAction(self.viewRecordsAction)
+        self.viewRecordsBtn.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
+        self.addPatientAction = QAction(QIcon(str(proj_path / 'images/040-patient.png')), 'Добавить пациента')
+        self.addPatientBtn = QToolButton()
+        self.addPatientBtn.setObjectName('PatientWidget')
+        self.addPatientBtn.setDefaultAction(self.addPatientAction)
+        self.addPatientBtn.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
+        self.addDoctorAction = QAction(QIcon(str(proj_path / 'images/054-Pharmacist.png')), 'Добавить врача')
+        self.addDoctorBtn = QToolButton()
+        self.addDoctorBtn.setObjectName('DoctorWidget')
+        self.addDoctorBtn.setDefaultAction(self.addDoctorAction)
+        self.addDoctorBtn.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
+        self.addWidget(self.recordsLabel)
+        self.addWidget(self.viewRecordsBtn)
+        self.addWidget(self.patientLabel)
+        self.addWidget(self.addRecordBtn)
+        self.addWidget(self.addPatientBtn)
+        self.addWidget(self.doctorLabel)
+        self.addWidget(self.addDoctorBtn)
+        self.setIconSize(QSize(40, 40))
+        self.setMaximumWidth(110)
+        self.setMovable(False)

@@ -1,13 +1,18 @@
-from PySide2.QtWidgets import QDialog, QLabel, QPushButton, QLineEdit, QVBoxLayout
-from utils import get_stylesheet
 from const import proj_path
-from PySide2.QtCore import Qt, QSize
+from custom import ErrorLabel
+from PySide2.QtCore import Qt
+from sql.query import AUTH_USER
+from utils import get_stylesheet
+from database import DatabaseExecutor
 from PySide2.QtGui import QPixmap, QImage
+from PySide2.QtWidgets import QDialog, QLabel, QPushButton, QLineEdit, QVBoxLayout
 
 
 class LoginWindow(QDialog):
 
     style = 'login.qss'
+    db = DatabaseExecutor
+    auth_user = None
 
     def __init__(self, parent=None):
         QDialog.__init__(self, parent)
@@ -18,11 +23,7 @@ class LoginWindow(QDialog):
         self.logo.setFixedSize(100, 100)
         self.logo.move(200, 20)
         self.logo.setPixmap(self.logo_pixmap)
-        self.err_label = QLabel()
-        self.err_label.setObjectName('ErrLabel')
-        self.err_label.setVisible(False)
-        self.err_label.setWordWrap(True)
-        self.err_label.setFixedSize(200, 25)
+        self.err_label = ErrorLabel()
         self.login_row = QLineEdit(self)
         self.login_row.setPlaceholderText('Логин')
         self.pwd_row = QLineEdit(self)
@@ -44,15 +45,11 @@ class LoginWindow(QDialog):
 
     def auth(self):
         self.err_label.setVisible(False)
-        user = self.login_row.text()
+        username = self.login_row.text()
         password = self.pwd_row.text()
+        user = self.db.exec_query(query=AUTH_USER, param=(username, password,), fetchone=True)[0]
         if not user:
-            self.has_error('Введите ваш логин')
-        elif not password:
-            self.has_error('Введите ваш пароль')
-        else:
-            self.has_error('Неверное имя пользователя или пароль')
-
-    def has_error(self, error):
-        self.err_label.setText(error)
-        self.err_label.setVisible(True)
+            self.err_label.has_error('Неверное имя пользователя или пароль')
+            return False
+        self.auth_user = username
+        self.accept()
