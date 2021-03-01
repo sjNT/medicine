@@ -2,7 +2,7 @@ from PySide2.QtCore import Qt
 from utils import get_stylesheet
 from database import DatabaseExecutor
 from PySide2.QtWidgets import QMainWindow, QLabel, QHBoxLayout, QLineEdit, QFormLayout, QWidget, \
-    QPushButton, QDateEdit
+    QPushButton, QDateEdit, QTableWidget, QHeaderView, QTableWidgetItem
 
 
 class ErrorLabel(QLabel):
@@ -101,3 +101,25 @@ class BaseDataWidget(QMainWindow):
 
     def set_header_label(self, label):
         self.header.setText(label)
+
+
+class TableWidget(QTableWidget):
+
+    style = 'main.qss'
+
+    def __init__(self):
+        QTableWidget.__init__(self)
+        self.tabHeaders = self.horizontalHeader()
+        self.verticalHeader().setVisible(False)
+        self.tabHeaders.setDefaultAlignment(Qt.AlignTop | Qt.AlignVCenter | Qt.AlignCenter)
+        """
+        self.tabHeaders.setResizeMode(0, QHeaderView.ResizeToContents)
+        self.tabHeaders.setResizeMode(1, QHeaderView.Stretch)
+        """
+        self.setStyleSheet(get_stylesheet(self.style))
+
+    def update_headers(self, headers):
+        self.setColumnCount(len(headers))
+        self.setHorizontalHeaderLabels(headers)
+        for i in range(len(headers)):
+            self.tabHeaders.setSectionResizeMode(i, QHeaderView.Stretch)

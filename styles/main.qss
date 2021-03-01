@@ -28,7 +28,7 @@ QToolButton{
     width: 110px;
     border-bottom: 1px solid black;
 }
-#DoctorLabel, #PatientLabel{
+#DoctorLabel, #PatientLabel, #CrtAppointmentLabel, #AllAppointmentLabel{
     color: #696969;
     font-size: 14pt;
 }
@@ -42,3 +42,32 @@ QToolButton{
     color: #ffffff;
     font-size: 12pt;
 }
+#SearchResultLabel{
+    color: #c3c3c3;
+    font-size: 8pt;
+}
+QHeaderView::section::first,
+QHeaderView::section::second{
+    background-color: #8e84b7;
+    padding: 4px;
+    font-size: 10pt;
+    color: white;
+    border-radius: none;
+    border-right: 1px dashed black;
+    height: 30px;
+    width: 80px;
+}
+QHeaderView::section::last{
+    background-color: #8e84b7;
+    padding: 4px;
+    font-size: 10pt;
+    color: white;
+    border-radius: none;
+    border: none;
+}
+QTableWidget{
+    border: 1px solid #a2a2a2;
+}
+QTableWidget::item:selected{
+    background-color: #e7e7e7;
+    }

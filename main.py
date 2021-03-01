@@ -7,10 +7,12 @@ from database import DatabaseExecutor
 from PySide2.QtWidgets import QMainWindow, QApplication, QStackedWidget, QDialog, QWidget
 from doctor import Doctor
 from patient import Patient
+from ap_new import AppointmentCreateRecord
+from ap_records import AppointmentRecords
 
 # https://www.flaticon.com/ru/packs/pharmaceutical-3/2?k=1614430300833
 
-stack_indexes = {'DoctorWidget': 1, 'PatientWidget': 2}
+stack_indexes = {'DoctorWidget': 1, 'PatientWidget': 2, 'CreateAppointmentWidget': 3, 'AllAppointmentWidget': 4}
 
 
 class MainWindow(QMainWindow):
@@ -29,13 +31,19 @@ class MainWindow(QMainWindow):
         self.mainWidget = QWidget()
         self.doctorWidget = Doctor()
         self.patientWidget = Patient()
+        self.newAppointment = AppointmentCreateRecord()
+        self.allAppointment = AppointmentRecords()
         self.stack.addWidget(self.mainWidget)
         self.stack.addWidget(self.doctorWidget)
         self.stack.addWidget(self.patientWidget)
+        self.stack.addWidget(self.newAppointment)
+        self.stack.addWidget(self.allAppointment)
         self.setCentralWidget(self.stack)
         # signals
         self._menu.addDoctorBtn.triggered.connect(self.switch_widget)
         self._menu.addPatientBtn.triggered.connect(self.switch_widget)
+        self._menu.addRecordBtn.triggered.connect(self.switch_widget)
+        self._menu.viewRecordsBtn.triggered.connect(self.switch_widget)
 
     def switch_widget(self):
         sender = self.sender()
