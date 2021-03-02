@@ -1,6 +1,5 @@
-import sqlite3
-from const import proj_path
 import contextlib
+import mysql.connector as mc
 
 
 class DatabaseExecutor:
@@ -22,4 +21,4 @@ class DatabaseExecutor:
         return data
 
 
-db = sqlite3.connect(proj_path / 'medicine.sqlite')
+db = mc.connect(user='tusur', password='ImXAaJRqvrI8r3r', host='109.123.144.99', port='3306', database='medicine')

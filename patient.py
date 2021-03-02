@@ -76,7 +76,6 @@ class Patient(BaseDataWidget):
                      self.numberRow.text(),)
             q = self.db.exec_query(ADD_PATIENT, param=param, retrieve_id=True)
             if not q:
-                self.err_label.has_error('Ошибка создания пациента')
                 return
             self.clear_form()
 

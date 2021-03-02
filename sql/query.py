@@ -25,3 +25,18 @@ INSERT INTO specialist(spec_code, doctor_id, category_name) VALUES ('%s', '%s', 
 ADD_PATIENT = """
 INSERT INTO patient(surname, name, b_date, gender, doc_s, doc_num) VALUES ('%s', '%s', '%s', '%s', '%s', '%s')
 """
+
+SPECIALIST_LIST = """
+SELECT d.id, CONCAT(d.surname, ' ', substr(d.name, 1, 1), '.', substr(d.patronymic, 1, 1), ', ', s2.value) AS fullname
+FROM doctor d
+INNER JOIN specialist s on d.id = s.doctor_id
+INNER JOIN specialization s2 ON s2.id = s.spec_code
+"""
+
+SEARCH_PATIENT = """
+SELECT p.id, p.surname || ' ' || substr(p.name, 1, 1) || '.' || ifnull(substr(p.patronymic, 1, 1), '')  || ', ' || b_date as details FROM patient p WHERE p.surname = '%s';
+"""
+
+INSERT_AP_RECORD = """
+INSERT INTO appointment(patient_id, specialist_id, visit_date) VALUES ('%s', '%s', '%s')
+"""
