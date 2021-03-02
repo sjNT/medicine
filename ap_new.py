@@ -3,12 +3,17 @@ from PySide2.QtWidgets import QMainWindow, QFormLayout, QWidget, QLabel, QLineEd
 from custom import ErrorLabel
 from utils import get_stylesheet
 from PySide2.QtCore import Qt
+from database import DatabaseExecutor
+from sql.query import SPECIALIST_LIST, SEARCH_PATIENT, INSERT_AP_RECORD
 
 
 class AppointmentCreateRecord(QMainWindow):
 
     window_label = 'Запись пациента'
     style = 'main.qss'
+    db = DatabaseExecutor
+    spec_idx = {}
+    patient_idx = {}
 
     def __init__(self):
         QMainWindow.__init__(self)
@@ -27,7 +32,7 @@ class AppointmentCreateRecord(QMainWindow):
         self.searchRow = QLineEdit()
         self.searchRow.setPlaceholderText('Введите фамилию')
         self.searchRow.setFixedWidth(180)
-        self.searchLabelResult = QLabel('Найдено 1000 записей')
+        self.searchLabelResult = QLabel()
         self.searchLabelResult.setObjectName('SearchResultLabel')
         self.searchBox.addWidget(self.searchLabel)
         self.searchBox.addWidget(self.searchRow)
@@ -93,16 +98,49 @@ class AppointmentCreateRecord(QMainWindow):
 
         # Signals
         self.searchRow.textChanged.connect(self.on_search_event)
+        self.submit.clicked.connect(self.save_record)
 
     def onload(self):
-        pass
+        self.clear_form()
+        self.update_specialist_items()
 
     def on_search_event(self, q):
-        print('qqq', q)
-        pass
+        if q == '':
+            self.searchLabelResult.clear()
+            return
+        data = self.db.exec_query(SEARCH_PATIENT, param=(q.capitalize(),))
+        if not data:
+            self.patientSelect.clear()
+        count = len(data)
+        result_count = 'Найдено: %s записей' % count if count > 0 else 'Ничего не найдено'
+        self.searchLabelResult.setText(result_count)
+        self.update_boxes(self.patientSelect, self.patient_idx, data)
 
-    def update_search_result(self, data):
-        self.patientSelect.addItems(['', 'М', 'Ж'])
-        pass
+    def clear_form(self):
+        self.searchRow.clear()
+        self.patientSelect.clear()
+        self.dateSelect.clear()
 
+    def update_specialist_items(self):
+        data = self.db.exec_query(SPECIALIST_LIST)
+        self.update_boxes(self.specialistSelect, self.spec_idx, data)
 
+    def update_boxes(self, target, idx, data):
+        if not data:
+            return
+        target.clear()
+        idx.clear()
+        st = 0
+        for s in data:
+            target.addItem(s[1])
+            idx[st] = s[0]
+            st += 1
+
+    def save_record(self):
+        q = self.db.exec_query(INSERT_AP_RECORD, param=(self.patient_idx[self.patientSelect.currentIndex()],
+                                                        self.spec_idx[self.specialistSelect.currentIndex()],
+                                                        self.dateSelect.date().toPython()), retrieve_id=True)
+        if q:
+            self.clear_form()
+        else:
+            self.err_label.has_error('Ошибка вставки записи')
