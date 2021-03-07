@@ -1,6 +1,6 @@
 from menu import Menu
 from const import proj_path
-from PySide2.QtCore import Qt
+from PySide2.QtCore import Qt, SIGNAL
 from login import LoginWindow
 from utils import get_stylesheet
 from database import DatabaseExecutor
@@ -9,7 +9,7 @@ from doctor import Doctor
 from patient import Patient
 from ap_new import AppointmentCreateRecord
 from ap_records import AppointmentRecords
-from patient_table import PatientRecords
+from patient_table import PatientRecords, LoadPatient
 
 # https://www.flaticon.com/ru/packs/pharmaceutical-3/2?k=1614430300833
 
@@ -43,6 +43,8 @@ class MainWindow(QMainWindow):
         self.stack.addWidget(self.allAppointment)
         self.stack.addWidget(self.allPatient)
         self.setCentralWidget(self.stack)
+
+        self.connect(self.allPatient.patientLoad, SIGNAL('patient_index(int)'), self.load_patient)
         # signals
         self._menu.addDoctorBtn.triggered.connect(self.switch_widget)
         self._menu.addPatientBtn.triggered.connect(self.switch_widget)
@@ -55,6 +57,10 @@ class MainWindow(QMainWindow):
         senderStackIndex = stack_indexes.get(sender.objectName())
         self.stack.setCurrentIndex(senderStackIndex)
         self.stack.widget(senderStackIndex).onload()
+
+    def load_patient(self, idx):
+        self.patientWidget.load_patient(idx)
+        self.stack.setCurrentIndex(self.stack.indexOf(self.patientWidget))
 
 
 if __name__ == "__main__":

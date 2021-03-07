@@ -139,6 +139,10 @@ class AppointmentCreateRecord(QMainWindow):
             st += 1
 
     def save_record(self):
+        param = (self.patient_idx[self.patientSelect.currentIndex()],
+                 self.spec_idx[self.specialistSelect.currentIndex()],
+                 self.dateSelect.date().toPython())
+        print(param)
         q = self.db.exec_query(INSERT_AP_RECORD, param=(self.patient_idx[self.patientSelect.currentIndex()],
                                                         self.spec_idx[self.specialistSelect.currentIndex()],
                                                         self.dateSelect.date().toPython()), retrieve_id=True)

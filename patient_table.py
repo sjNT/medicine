@@ -1,7 +1,7 @@
 from PySide2.QtWidgets import QMainWindow, QFormLayout, QWidget, QLabel, QTableWidgetItem, QPushButton
 from custom import TableWidget, ErrorLabel
 from utils import get_stylesheet
-from PySide2.QtCore import Qt
+from PySide2.QtCore import Qt, QObject, Signal, SIGNAL
 from database import DatabaseExecutor
 from sql.query import GET_PATIENT_LIST
 
@@ -9,7 +9,7 @@ from sql.query import GET_PATIENT_LIST
 class PatientRecords(QMainWindow):
 
     window_label = 'Пациенты'
-    headers = ['#', 'ФИО', 'Дата рождения', 'Серия полиса', 'Номер полиса', '']
+    headers = ['№', 'ФИО', 'Дата рождения', 'Серия полиса', 'Номер полиса', '']
     style = 'main.qss'
     db = DatabaseExecutor
 
@@ -37,6 +37,7 @@ class PatientRecords(QMainWindow):
         self.formWidget.setLayout(self.formBox)
         self.setStyleSheet(get_stylesheet(self.style))
         self.setCentralWidget(self.formWidget)
+        self.patientLoad = LoadPatient()
 
     def onload(self):
         data = self.db.exec_query(GET_PATIENT_LIST)
@@ -59,4 +60,8 @@ class PatientRecords(QMainWindow):
     def edit_patient(self):
         sender = self.sender()
         patient_idx = sender.property("row")
+        self.patientLoad.patient_index.emit(patient_idx)
 
+
+class LoadPatient(QObject):
+    patient_index = Signal(int)

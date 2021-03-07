@@ -23,7 +23,11 @@ INSERT INTO patient(surname, name, patronymic, b_date, gender, doc_s, doc_num) V
 """
 
 UPDATE_PATIENT = """
-UPDATE patient SET surname = '%s', name='%s', patronymic='%s', b_date = '%s', gender = '%s', doc_s = '%s', doc_num = '%s'
+UPDATE patient SET surname = '%s', name='%s', patronymic='%s', b_date = '%s', gender = '%s', doc_s = '%s', doc_num = '%s' WHERE id = '%s'
+"""
+
+GET_PATIENT = """
+SELECT surname, name, patronymic, b_date, gender, doc_s, doc_num FROM patient WHERE id = '%s'
 """
 
 GET_PATIENT_CONTACTS = """
@@ -59,4 +63,14 @@ doc_s, doc_num FROM patient p
 
 INSERT_CONTACTS = """
 INSERT INTO patient_contact(number, tel_type_id, patient_id) VALUES('%s', '%s', '%s')
+"""
+
+GET_APPOINTMENTS = """
+SELECT a.id, visit_date, CONCAT(p.surname, ' ', p.name, ' ' , p.patronymic, ' ', p.b_date) as patient,
+       CONCAT(d.surname, ' ', SUBSTR(d.name, 1, 1), '.', SUBSTR(d.patronymic, 1, 1), '.', ' ', s.value) as doc
+FROM appointment a
+INNER JOIN patient p on a.patient_id = p.id
+INNER JOIN specialization s on a.specialist_id = s.id
+INNER JOIN specialist s2 on a.specialist_id = s2.id
+INNER JOIN doctor d on s2.doctor_id = d.id
 """

@@ -1,12 +1,13 @@
 from custom import BaseDataWidget, ContactWidget
 from PySide2.QtWidgets import QLabel, QHBoxLayout, QComboBox, QLineEdit, QPushButton
-from sql.query import ADD_PATIENT, UPDATE_PATIENT
+from sql.query import ADD_PATIENT, UPDATE_PATIENT, GET_PATIENT
 
 
 class Patient(BaseDataWidget):
 
     window_label = 'Добавить пациента'
     patient_idx = None
+    gender_idx = {None: 0, 'М': 1, 'Ж': 2}
 
     def __init__(self):
         BaseDataWidget.__init__(self)
@@ -76,10 +77,6 @@ class Patient(BaseDataWidget):
     def save_data(self):
         self.err_label.setVisible(False)
         if self.is_valid():
-            if not self.patient_idx:
-                query = ADD_PATIENT
-            else:
-                query = UPDATE_PATIENT
             param = (self.surnameRow.text(),
                      self.nameRow.text(),
                      self.patronymicRow.text(),
@@ -87,6 +84,11 @@ class Patient(BaseDataWidget):
                      self.genderSelect.currentText(),
                      self.seriesRow.text(),
                      self.numberRow.text(),)
+            if not self.patient_idx:
+                query = ADD_PATIENT
+            else:
+                query = UPDATE_PATIENT
+                param += (self.patient_idx, )
             q = self.db.exec_query(query, param=param, retrieve_id=True)
             if not q:
                 return
@@ -112,3 +114,14 @@ class Patient(BaseDataWidget):
     def show_contact_form(self):
         #if self.patient_idx:
         self.contact.load(self.patient_idx)
+
+    def load_patient(self, idx):
+        data = self.db.exec_query(GET_PATIENT, param=(idx, ))
+        self.surnameRow.setText(str(data[0][0]))
+        self.nameRow.setText(str(data[0][1]))
+        self.patronymicRow.setText(str(data[0][2]))
+        self.bdRow.setDate(data[0][3])
+        self.genderSelect.setCurrentIndex(self.gender_idx.get(data[0][4]))
+        self.seriesRow.setText(str(data[0][5]))
+        self.numberRow.setText(str(data[0][6]))
+        self.patient_idx = idx
