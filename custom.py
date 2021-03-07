@@ -2,7 +2,8 @@ from PySide2.QtCore import Qt
 from utils import get_stylesheet
 from database import DatabaseExecutor
 from PySide2.QtWidgets import QMainWindow, QLabel, QHBoxLayout, QLineEdit, QFormLayout, QWidget, \
-    QPushButton, QDateEdit, QTableWidget, QHeaderView, QTableWidgetItem
+    QPushButton, QDateEdit, QTableWidget, QHeaderView, QVBoxLayout, QComboBox
+from sql.query import GET_TEL_TYPES, GET_PATIENT_CONTACTS, INSERT_CONTACTS
 
 
 class ErrorLabel(QLabel):
@@ -123,3 +124,67 @@ class TableWidget(QTableWidget):
         self.setHorizontalHeaderLabels(headers)
         for i in range(len(headers)):
             self.tabHeaders.setSectionResizeMode(i, QHeaderView.Stretch)
+
+
+class ContactWidget(QWidget):
+
+    style = 'main.qss'
+    db = DatabaseExecutor
+    phone_type_idx = {}
+
+    def __init__(self):
+        QWidget.__init__(self)
+        self.setWindowTitle('Добавить контакт')
+        self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.WindowModal | Qt.ApplicationModal)
+        self.formBox = QFormLayout()
+
+        # Phone type
+        self.phone_typeBox = QHBoxLayout()
+        self.phone_typeLabel = QLabel('Тип телефона:')
+        self.phone_type = QComboBox()
+        self.phone_type.setFixedWidth(280)
+        self.phone_typeBox.addWidget(self.phone_typeLabel)
+        self.phone_typeBox.addWidget(self.phone_type)
+
+        # Phone
+        self.phoneBox = QHBoxLayout()
+        self.phoneLabel = QLabel('Телефон:')
+        self.phoneRow = QLineEdit()
+        self.phoneRow.setFixedWidth(280)
+        self.phoneBox.addWidget(self.phoneLabel)
+        self.phoneBox.addWidget(self.phoneRow)
+
+        # Save
+        self.savebtn = QPushButton('Сохранить')
+        self.savebtn.setObjectName('SubmitBtn')
+
+        self.formBox.addRow(self.phone_typeBox)
+        self.formBox.addRow(self.phoneBox)
+        self.formBox.addRow(self.savebtn)
+        self.setLayout(self.formBox)
+        self.setStyleSheet(get_stylesheet(self.style))
+        # self.setFixedWidth(400)
+
+    def update_phone_types(self):
+        data = self.db.exec_query(GET_TEL_TYPES)
+        if data:
+            print(data)
+            self.phone_type_idx.clear()
+            self.phone_type.clear()
+            for i in data:
+                self.phone_type_idx[i[0]] = i[1]
+                self.phone_type.addItem(i[1])
+            print(self.phone_type_idx)
+
+    def load(self, patient_idx):
+        #if patient_idx:
+        self.update_phone_types()
+        self.show()
+        # data = self.db.exec_query(GET_PATIENT_CONTACTS, param=(patient_idx, ))
+        #if data:
+
+    def insert_contacts(self, patient_idx):
+        if self.phone_type.currentText() != '' and self.phoneBox.text() != '':
+            self.db.exec_query(INSERT_CONTACTS, param=(self.phoneBox.text(),
+                                                       self.phone_type_idx.get(self.phone_type.currentText()),
+                                                       patient_idx))

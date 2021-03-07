@@ -107,6 +107,7 @@ class AppointmentCreateRecord(QMainWindow):
     def on_search_event(self, q):
         if q == '':
             self.searchLabelResult.clear()
+            self.patientSelect.clear()
             return
         data = self.db.exec_query(SEARCH_PATIENT, param=(q.capitalize(),))
         if not data:
@@ -132,6 +133,7 @@ class AppointmentCreateRecord(QMainWindow):
         idx.clear()
         st = 0
         for s in data:
+            print(s)
             target.addItem(s[1])
             idx[st] = s[0]
             st += 1

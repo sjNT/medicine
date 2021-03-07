@@ -1,16 +1,18 @@
-from custom import BaseDataWidget
-from PySide2.QtWidgets import QLabel, QHBoxLayout, QComboBox, QLineEdit
-from sql.query import ADD_PATIENT
+from custom import BaseDataWidget, ContactWidget
+from PySide2.QtWidgets import QLabel, QHBoxLayout, QComboBox, QLineEdit, QPushButton
+from sql.query import ADD_PATIENT, UPDATE_PATIENT
 
 
 class Patient(BaseDataWidget):
 
     window_label = 'Добавить пациента'
+    patient_idx = None
 
     def __init__(self):
         BaseDataWidget.__init__(self)
         self.header.setObjectName('PatientLabel')
         self.set_header_label(self.window_label)
+        self.contact = ContactWidget()
 
         # Gender
         self.genderBox = QHBoxLayout()
@@ -37,6 +39,10 @@ class Patient(BaseDataWidget):
         self.numberBox.addWidget(self.numberLabel)
         self.numberBox.addWidget(self.numberRow)
 
+        # Add contact
+        self.addContact = QPushButton('Добавить контакт')
+        self.addContact.setMaximumWidth(200)
+
         # QFormLayout add rows
         self.formBox.addRow(self.header)
         self.formBox.addRow(self.surnameBox)
@@ -46,12 +52,14 @@ class Patient(BaseDataWidget):
         self.formBox.addRow(self.genderBox)
         self.formBox.addRow(self.seriesBox)
         self.formBox.addRow(self.numberBox)
+        self.formBox.addRow(self.addContact)
         self.formBox.addRow(self.err_label)
         self.formBox.addRow(self.formBtnBox)
 
         # Signals
         self._clean.clicked.connect(self.clear_form)
         self.submit.clicked.connect(self.save_data)
+        self.addContact.clicked.connect(self.show_contact_form)
 
     def onload(self):
         self.clear_form()
@@ -68,16 +76,22 @@ class Patient(BaseDataWidget):
     def save_data(self):
         self.err_label.setVisible(False)
         if self.is_valid():
+            if not self.patient_idx:
+                query = ADD_PATIENT
+            else:
+                query = UPDATE_PATIENT
             param = (self.surnameRow.text(),
                      self.nameRow.text(),
+                     self.patronymicRow.text(),
                      self.bdRow.date().toPython(),
                      self.genderSelect.currentText(),
                      self.seriesRow.text(),
                      self.numberRow.text(),)
-            q = self.db.exec_query(ADD_PATIENT, param=param, retrieve_id=True)
+            q = self.db.exec_query(query, param=param, retrieve_id=True)
             if not q:
                 return
-            self.clear_form()
+            self.patient_idx = q
+            # self.clear_form()
 
     def is_valid(self):
         self.err_label.refresh()
@@ -94,3 +108,7 @@ class Patient(BaseDataWidget):
         elif self.numberRow.text() == '':
             self.err_label.has_error('Заполните номер полиса')
         return self.err_label.is_error
+
+    def show_contact_form(self):
+        #if self.patient_idx:
+        self.contact.load(self.patient_idx)
