@@ -1,10 +1,14 @@
+import os
+import datetime
 from PySide2.QtWidgets import QMainWindow, QFormLayout, QWidget, QLabel, QLineEdit, QHBoxLayout, QVBoxLayout, \
     QComboBox, QDateEdit, QPushButton
 from custom import ErrorLabel
 from utils import get_stylesheet
 from PySide2.QtCore import Qt
 from database import DatabaseExecutor
-from sql.query import SPECIALIST_LIST, SEARCH_PATIENT, INSERT_AP_RECORD
+from sql.query import SPECIALIST_LIST, SEARCH_PATIENT, INSERT_AP_RECORD, LATEST_TICKET, TICKET_CONTEXT
+from docxtpl import DocxTemplate
+from const import proj_path
 
 
 class AppointmentCreateRecord(QMainWindow):
@@ -65,6 +69,7 @@ class AppointmentCreateRecord(QMainWindow):
         self.dateLabel.setFixedWidth(120)
         self.dateSelect = QDateEdit()
         self.dateSelect.setFixedWidth(260)
+        self.dateSelect.setDate(datetime.datetime.now())
         self.dateBox.addWidget(self.dateLabel)
         self.dateBox.addWidget(self.dateSelect)
         self.dateBox.setSpacing(20)
@@ -98,7 +103,7 @@ class AppointmentCreateRecord(QMainWindow):
 
         # Signals
         self.searchRow.textChanged.connect(self.on_search_event)
-        self.submit.clicked.connect(self.save_record)
+        self.submit.clicked.connect(self.save_and_print_record)
 
     def onload(self):
         self.clear_form()
@@ -109,7 +114,8 @@ class AppointmentCreateRecord(QMainWindow):
             self.searchLabelResult.clear()
             self.patientSelect.clear()
             return
-        data = self.db.exec_query(SEARCH_PATIENT, param=(q.capitalize(),))
+        query = SEARCH_PATIENT % q.capitalize()
+        data = self.db.exec_query(query)
         if not data:
             self.patientSelect.clear()
         count = len(data)
@@ -138,15 +144,24 @@ class AppointmentCreateRecord(QMainWindow):
             idx[st] = s[0]
             st += 1
 
-    def save_record(self):
-        param = (self.patient_idx[self.patientSelect.currentIndex()],
-                 self.spec_idx[self.specialistSelect.currentIndex()],
-                 self.dateSelect.date().toPython())
-        print(param)
-        q = self.db.exec_query(INSERT_AP_RECORD, param=(self.patient_idx[self.patientSelect.currentIndex()],
-                                                        self.spec_idx[self.specialistSelect.currentIndex()],
-                                                        self.dateSelect.date().toPython()), retrieve_id=True)
+    def save_and_print_record(self):
+        param = {'patient_idx': self.patient_idx[self.patientSelect.currentIndex()],
+                 'specialist_idx': self.spec_idx[self.specialistSelect.currentIndex()],
+                 'visit_date': self.dateSelect.date().toPython()}
+        latest_ticket_id = self.db.exec_query(LATEST_TICKET, fetchone=True)
+        param['ticket_id'] = latest_ticket_id[0]
+        q = self.db.exec_query(INSERT_AP_RECORD, param=param, retrieve_id=True)
         if q:
             self.clear_form()
+            self.render_template(record_id=q)
         else:
             self.err_label.has_error('Ошибка вставки записи')
+
+    def render_template(self, record_id):
+        template = DocxTemplate(str(proj_path / 'templates/template_talon.docx'))
+        context = self.db.exec_query(TICKET_CONTEXT, param=(record_id,), dictionary=True)[0]
+        print(context)
+        template.render(context=context)
+        filename = str(proj_path / 'talon/talon.docx')
+        template.save(filename)
+        os.startfile(filename, 'print')

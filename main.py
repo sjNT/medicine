@@ -45,6 +45,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.stack)
 
         self.connect(self.allPatient.patientLoad, SIGNAL('patient_index(int)'), self.load_patient)
+        self.connect(self.allAppointment.print_talon, SIGNAL('talon_index(int)'), self.print_talon)
         # signals
         self._menu.addDoctorBtn.triggered.connect(self.switch_widget)
         self._menu.addPatientBtn.triggered.connect(self.switch_widget)
@@ -61,6 +62,10 @@ class MainWindow(QMainWindow):
     def load_patient(self, idx):
         self.patientWidget.load_patient(idx)
         self.stack.setCurrentIndex(self.stack.indexOf(self.patientWidget))
+
+    def print_talon(self, idx):
+        print(idx)
+        self.newAppointment.render_template(idx)
 
 
 if __name__ == "__main__":

@@ -5,12 +5,10 @@ import mysql.connector as mc
 class DatabaseExecutor:
 
     @staticmethod
-    def exec_query(query, param=None, retrieve_id=False, fetchone=False):
-        print(query, param)
-        if param:
-            query = query % param
-        with contextlib.closing(db.cursor()) as cur:
-            cur.execute(query)
+    def exec_query(query, param=(), retrieve_id=False, fetchone=False, dictionary=False):
+        # print(query, param)
+        with contextlib.closing(db.cursor(dictionary=dictionary)) as cur:
+            cur.execute(query, param)
             if fetchone:
                 data = cur.fetchone()
             else:
