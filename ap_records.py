@@ -1,12 +1,16 @@
 from PySide2.QtWidgets import QMainWindow, QFormLayout, QWidget, QLabel, QTableWidgetItem, QHeaderView, QHBoxLayout, \
-    QPushButton
+    QPushButton, QDateEdit, QVBoxLayout
 from PySide2.QtGui import QIcon
 from custom import TableWidget, ErrorLabel
 from utils import get_stylesheet
 from PySide2.QtCore import Qt, QObject, Signal, SIGNAL
 from database import DatabaseExecutor
-from sql.query import GET_APPOINTMENTS, DEL_APPOINTMENTS
+from sql.query import GET_APPOINTMENTS, DEL_APPOINTMENTS, FILTER_APPOINTMENTS
 from const import proj_path
+import datetime
+from docxtpl import Document
+import time
+import os
 
 
 class AppointmentRecords(QMainWindow):
@@ -27,9 +31,15 @@ class AppointmentRecords(QMainWindow):
         self.header.setObjectName('AllAppointmentLabel')
         self.header.setMinimumWidth(200)
         self.header.setContentsMargins(0, 0, 0, 50)
+        self.report_btn = QPushButton('  Выгрузить отчёт')
+        self.report_btn.setFixedSize(130, 30)
+        self.report_icon = QIcon(str(proj_path / 'images/word.png'))
+        self.report_btn.setIcon(self.report_icon)
+        self.report_widget = ReportWindow()
 
         self.formBox = QFormLayout()
         self.formBox.addRow(self.header)
+        self.formBox.addRow(self.report_btn)
         self.formBox.addRow(self.table)
         self.formBox.addRow(self.err_label)
         # QFormLayout settings
@@ -41,6 +51,7 @@ class AppointmentRecords(QMainWindow):
         self.setStyleSheet(get_stylesheet(self.style))
         self.print_talon = PrintTalon()
         self.setCentralWidget(self.formWidget)
+        self.report_btn.clicked.connect(self.show_report_widget)
 
     def onload(self):
         data = self.db.exec_query(GET_APPOINTMENTS)
@@ -81,6 +92,52 @@ class AppointmentRecords(QMainWindow):
         removed_idx = sender.property("printrow")
         self.print_talon.talon_index.emit(removed_idx)
 
+    def show_report_widget(self):
+        self.report_widget.show()
+
 
 class PrintTalon(QObject):
     talon_index = Signal(int)
+
+
+class ReportWindow(QWidget):
+
+    db = DatabaseExecutor
+
+    def __init__(self, parent=None):
+        QWidget.__init__(self, parent)
+        self.setWindowTitle('Выгрузить отчет')
+        self.setFixedSize(400, 200)
+        self.record_date = QDateEdit()
+        self.accept_btn = QPushButton('Получить')
+        self.v_box = QVBoxLayout()
+        self.date_h_box = QHBoxLayout()
+        self.record_date_label = QLabel('Выберите дату:')
+        self.date_h_box.addWidget(self.record_date_label)
+        self.date_h_box.addWidget(self.record_date)
+        self.v_box.addLayout(self.date_h_box)
+        self.v_box.addWidget(self.accept_btn)
+        self.record_date.setDate(datetime.datetime.now())
+        self.setLayout(self.v_box)
+        self.accept_btn.clicked.connect(self.get_records)
+
+    def get_records(self):
+        report = Document()
+
+        date_row = self.record_date.date().toPython()
+        dt = '%s-%s-%s' % (date_row.year, date_row.month, date_row.day)
+        report.add_heading('Отчёт о записях %s' % dt, 0)
+        data = self.db.exec_query(FILTER_APPOINTMENTS, param=(dt, ))
+        table = report.add_table(rows=len(data), cols=5)
+        hdr_cells = table.rows[0].cells
+        hdr_cells[0].text = 'Дата приема'
+        hdr_cells[1].text = 'Пациент'
+        hdr_cells[2].text = 'Специалист'
+        filename = str(int(time.time()))
+        for i in range(len(data)):
+            row_cells = table.add_row().cells
+            row_cells[0].text = '%s-%s-%s' % (data[i][0].year, data[i][0].month, data[i][0].day)
+            row_cells[1].text = data[i][1]
+            row_cells[2].text = data[i][2]
+            report.save(str(proj_path / f'generate_docs/{filename}.docx'))
+        os.startfile(str(proj_path / f'generate_docs/{filename}.docx'))

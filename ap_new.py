@@ -139,7 +139,6 @@ class AppointmentCreateRecord(QMainWindow):
         idx.clear()
         st = 0
         for s in data:
-            print(s)
             target.addItem(s[1])
             idx[st] = s[0]
             st += 1
@@ -160,7 +159,6 @@ class AppointmentCreateRecord(QMainWindow):
     def render_template(self, record_id):
         template = DocxTemplate(str(proj_path / 'templates/template_talon.docx'))
         context = self.db.exec_query(TICKET_CONTEXT, param=(record_id,), dictionary=True)[0]
-        print(context)
         template.render(context=context)
         filename = str(proj_path / 'talon/talon.docx')
         template.save(filename)

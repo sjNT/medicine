@@ -52,6 +52,7 @@ class MainWindow(QMainWindow):
         self._menu.addRecordBtn.triggered.connect(self.switch_widget)
         self._menu.viewRecordsBtn.triggered.connect(self.switch_widget)
         self._menu.patientViewBtn.triggered.connect(self.switch_widget)
+        self._menu.viewRecordsBtn.click()
 
     def switch_widget(self):
         sender = self.sender()
@@ -64,7 +65,6 @@ class MainWindow(QMainWindow):
         self.stack.setCurrentIndex(self.stack.indexOf(self.patientWidget))
 
     def print_talon(self, idx):
-        print(idx)
         self.newAppointment.render_template(idx)
 
 
@@ -76,7 +76,7 @@ if __name__ == "__main__":
     if login.exec_() == QDialog.Accepted:
         main = MainWindow()
         main.show()
-        """
+    """
     main = MainWindow()
     main.show()
     sys.exit(app.exec_())

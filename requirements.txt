@@ -1,4 +1,10 @@
+docxtpl==0.11.3
+Jinja2==2.11.3
+lxml==4.6.2
+MarkupSafe==1.1.1
+mysql-connector-python==8.0.23
 protobuf==3.15.3
 PySide2==5.15.2
+python-docx==0.8.10
 shiboken2==5.15.2
 six==1.15.0

@@ -92,3 +92,14 @@ JOIN specialist s on s.id = a.specialist_id
 JOIN doctor d on d.id = s.doctor_id
 JOIN cabinet c on s.id = c.spec_id
 WHERE a.id = %s"""
+
+FILTER_APPOINTMENTS = """
+SELECT visit_date, CONCAT(p.surname, ' ', p.name, ' ' , p.patronymic, ' ', p.b_date) as patient,
+       CONCAT(d.surname, ' ', SUBSTR(d.name, 1, 1), '.', SUBSTR(d.patronymic, 1, 1), '.', ' ', s.value) as doc
+FROM appointment a
+INNER JOIN patient p on a.patient_id = p.id
+INNER JOIN specialization s on a.specialist_id = s.id
+INNER JOIN specialist s2 on a.specialist_id = s2.id
+INNER JOIN doctor d on s2.doctor_id = d.id
+WHERE visit_date = %s
+"""

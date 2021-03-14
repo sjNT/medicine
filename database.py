@@ -6,7 +6,7 @@ class DatabaseExecutor:
 
     @staticmethod
     def exec_query(query, param=(), retrieve_id=False, fetchone=False, dictionary=False):
-        # print(query, param)
+        print(query, param)
         with contextlib.closing(db.cursor(dictionary=dictionary)) as cur:
             cur.execute(query, param)
             if fetchone:

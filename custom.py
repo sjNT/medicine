@@ -168,20 +168,18 @@ class ContactWidget(QWidget):
     def update_phone_types(self):
         data = self.db.exec_query(GET_TEL_TYPES)
         if data:
-            print(data)
             self.phone_type_idx.clear()
             self.phone_type.clear()
             for i in data:
                 self.phone_type_idx[i[0]] = i[1]
                 self.phone_type.addItem(i[1])
-            print(self.phone_type_idx)
 
     def load(self, patient_idx):
-        #if patient_idx:
+        # if patient_idx:
         self.update_phone_types()
         self.show()
         # data = self.db.exec_query(GET_PATIENT_CONTACTS, param=(patient_idx, ))
-        #if data:
+        # if data:
 
     def insert_contacts(self, patient_idx):
         if self.phone_type.currentText() != '' and self.phoneBox.text() != '':

@@ -43,10 +43,8 @@ class PatientRecords(QMainWindow):
         data = self.db.exec_query(GET_PATIENT_LIST)
         self.table.setRowCount(0)
         self.table.setRowCount(len(data))
-        print(data)
         for row in range(len(data)):
             for column in range(len(data[row])):
-                print(str(data[row][column]))
                 self.table.setItem(row, column, QTableWidgetItem(str(data[row][column])))
             editBtn = QPushButton('Редактировать')
             editBtn.setProperty("row", data[row][0])
