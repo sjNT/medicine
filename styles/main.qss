@@ -28,7 +28,7 @@ QToolButton{
     width: 110px;
     border-bottom: 1px solid black;
 }
-#DoctorLabel, #PatientLabel, #CrtAppointmentLabel, #AllAppointmentLabel, #AllPatientLabel{
+#DoctorLabel, #PatientLabel, #CrtAppointmentLabel, #AllAppointmentLabel, #AllPatientLabel, #ReceptionLabel{
     color: #696969;
     font-size: 14pt;
 }

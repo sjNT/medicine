@@ -10,11 +10,12 @@ from patient import Patient
 from ap_new import AppointmentCreateRecord
 from ap_records import AppointmentRecords
 from patient_table import PatientRecords, LoadPatient
+from reception import ReceptionWidget
 
 # https://www.flaticon.com/ru/packs/pharmaceutical-3/2?k=1614430300833
 
 stack_indexes = {'DoctorWidget': 1, 'PatientWidget': 2, 'CreateAppointmentWidget': 3, 'AllAppointmentWidget': 4,
-                 'ViewPatientWidget': 5}
+                 'ViewPatientWidget': 5, 'ReceptionWidget': 6}
 
 
 class MainWindow(QMainWindow):
@@ -24,7 +25,7 @@ class MainWindow(QMainWindow):
 
     def __init__(self, parent=None):
         QMainWindow.__init__(self, parent)
-        self.setMinimumSize(1000, 600)
+        self.setMinimumSize(1000, 700)
         self.setWindowTitle('Поликлиника №123')
         self.stack = QStackedWidget()
         self._menu = Menu()
@@ -36,12 +37,14 @@ class MainWindow(QMainWindow):
         self.newAppointment = AppointmentCreateRecord()
         self.allAppointment = AppointmentRecords()
         self.allPatient = PatientRecords()
+        self.reception = ReceptionWidget()
         self.stack.addWidget(self.mainWidget)
         self.stack.addWidget(self.doctorWidget)
         self.stack.addWidget(self.patientWidget)
         self.stack.addWidget(self.newAppointment)
         self.stack.addWidget(self.allAppointment)
         self.stack.addWidget(self.allPatient)
+        self.stack.addWidget(self.reception)
         self.setCentralWidget(self.stack)
 
         self.connect(self.allPatient.patientLoad, SIGNAL('patient_index(int)'), self.load_patient)
@@ -52,6 +55,7 @@ class MainWindow(QMainWindow):
         self._menu.addRecordBtn.triggered.connect(self.switch_widget)
         self._menu.viewRecordsBtn.triggered.connect(self.switch_widget)
         self._menu.patientViewBtn.triggered.connect(self.switch_widget)
+        self._menu.receptionBtn.triggered.connect(self.switch_widget)
         self._menu.viewRecordsBtn.click()
 
     def switch_widget(self):
