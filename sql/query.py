@@ -1,5 +1,12 @@
 AUTH_USER = """
-SELECT count(*) FROM user WHERE username = %s AND password = %s
+SELECT id FROM user WHERE username = %s AND password = %s
+"""
+
+AUTH_USER_DETAILS = """
+SELECT id, CONCAT(lastname, ' ', substr(firstname, 1, 1), '.', substr(patronymic, 1, 1), '.') AS username,
+specialist_id
+FROM user
+WHERE id = %s
 """
 
 GET_SPECIALIZATION = """
@@ -62,7 +69,7 @@ doc_s, doc_num FROM patient p
 """
 
 INSERT_CONTACTS = """
-INSERT INTO patient_contact(number, tel_type_id, patient_id) VALUES(%s, %s, %s)
+INSERT INTO patient_contact(num, tel_type_id, patient_id) VALUES(%s, %s, %s)
 """
 
 GET_APPOINTMENTS = """
@@ -102,4 +109,74 @@ INNER JOIN specialization s on a.specialist_id = s.id
 INNER JOIN specialist s2 on a.specialist_id = s2.id
 INNER JOIN doctor d on s2.doctor_id = d.id
 WHERE visit_date = %s
+"""
+
+GET_RECEPTION_PATIENT = """
+SELECT p.id, p.b_date, CONCAT(p.surname, ' ', p.name, ' ', p.patronymic) as patient, a.id FROM appointment a
+INNER JOIN patient p on a.patient_id = p.id
+WHERE specialist_id = %s AND visit_date = CURRENT_DATE AND a.start_time is null
+"""
+
+START_APPOINTMENT = """
+UPDATE appointment SET start_time = current_timestamp WHERE id = %s
+"""
+
+END_APPOINTMENT = """
+UPDATE appointment SET end_time = current_timestamp WHERE id = %s
+"""
+
+GET_DIAGNOSIS_LIST = """
+SELECT value FROM diagnosis WHERE appointment_id = %s ORDER BY id
+"""
+
+INSERT_DIAGNOSIS = """
+INSERT INTO diagnosis(value, appointment_id, therapy_value) VALUES (%s, %s, %s)
+"""
+
+ANALYSIS_INSERT = """
+INSERT INTO analysis (value, req_spec_id, appointment_id) VALUES (%s, %s, %s)
+"""
+
+ANALYSIS_CONTEXT = """
+SELECT a.value, CONCAT(d.surname, ' ', d.name, ' ', d.patronymic) as doctor,
+       CONCAT(p.surname, ' ', p.name, ' ', p.patronymic) as patient, p.b_date as patient_b_date FROM analysis a
+INNER JOIN specialist s on a.req_spec_id = s.id
+INNER JOIN doctor d on s.doctor_id = d.id
+INNER JOIN appointment a2 on a.appointment_id = a2.id
+INNER JOIN patient p on a2.patient_id = p.id
+WHERE a.appointment_id = %s
+"""
+
+GET_ANALYSIS_LIST = """
+SELECT a.value, CONCAT(p.surname, ' ', p.name, ' ', p.patronymic, ' ', DATE_FORMAT(p.b_date, '%Y'), ' г.р.') as patient,
+       CASE WHEN analysis_result IS NOT NULL THEN 'есть результат' ELSE 'нет результатов' END  as result, a.id
+FROM analysis a
+INNER JOIN appointment a2 on a.appointment_id = a2.id
+INNER JOIN patient p on a2.patient_id = p.id
+"""
+
+UPDATE_ANALYSIS_RESULT = """
+UPDATE analysis SET analysis_result = %s WHERE id = %s
+"""
+
+ANALYSIS_RESULT_CONTEXT = """
+SELECT a.value, CONCAT(p.surname, ' ', p.name, ' ', p.patronymic) as patient,
+       p.b_date as patient_b_date, a.analysis_result, CURRENT_DATE as analysis_date  FROM analysis a
+INNER JOIN appointment a2 on a.appointment_id = a2.id
+INNER JOIN patient p on a2.patient_id = p.id
+WHERE a.id = %s
+"""
+
+RECEPTION_CONTEXT = """
+SELECT CONCAT(p.surname, ' ', p.name, ' ', p.patronymic) as patient, p.b_date as patient_b_date,
+       a.visit_date, a.start_time, a.complaints,
+       CONCAT(d.surname, ' ', d.name, ' ', d.patronymic) as doctor FROM appointment a
+INNER JOIN patient p on a.patient_id = p.id
+INNER JOIN specialist s on a.specialist_id = s.id
+INNER JOIN doctor d on s.doctor_id = d.id
+WHERE a.id = %s
+"""
+
+DIAGNOSIS_CONTEXT = """
+SELECT value, therapy_value FROM diagnosis WHERE appointment_id = %s
 """

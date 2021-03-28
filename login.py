@@ -1,7 +1,8 @@
 from const import proj_path
 from custom import ErrorLabel
 from PySide2.QtCore import Qt
-from sql.query import AUTH_USER
+from types import SimpleNamespace
+from sql.query import AUTH_USER, AUTH_USER_DETAILS
 from utils import get_stylesheet
 from database import DatabaseExecutor
 from PySide2.QtGui import QPixmap, QImage
@@ -12,7 +13,8 @@ class LoginWindow(QDialog):
 
     style = 'login.qss'
     db = DatabaseExecutor
-    auth_user = None
+    auth_user = {}
+    auth_user_details = {}
 
     def __init__(self, parent=None):
         QDialog.__init__(self, parent)
@@ -41,15 +43,22 @@ class LoginWindow(QDialog):
         self.v_box.addWidget(self.auth_btn)
         self.setStyleSheet(get_stylesheet(self.style))
         self.setLayout(self.v_box)
+        self.login_row.setText('burnov')
+        self.pwd_row.setText('burnov')
         self.auth_btn.clicked.connect(self.auth)
 
     def auth(self):
         self.err_label.setVisible(False)
         username = self.login_row.text()
         password = self.pwd_row.text()
-        user = self.db.exec_query(query=AUTH_USER, param=(username, password,), fetchone=True)[0]
+        user = self.db.exec_query(query=AUTH_USER, param=(username, password,), fetchone=True)
         if not user:
             self.err_label.has_error('Неверное имя пользователя или пароль')
             return False
-        self.auth_user = username
+        self.auth_user['username'] = username
+        user_details = self.db.exec_query(AUTH_USER_DETAILS, param=(user[0], ), fetchone=True)
+        self.auth_user['user_id'] = user_details[0]
+        self.auth_user['user_fullname'] = user_details[1]
+        self.auth_user['specialist_id'] = user_details[2]
+        self.auth_user_details = SimpleNamespace(**self.auth_user)
         self.accept()
