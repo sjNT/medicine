@@ -4,9 +4,10 @@ from database import DatabaseExecutor
 from PySide2.QtWidgets import QMainWindow, QLabel, QHBoxLayout, QLineEdit, QFormLayout, QWidget, \
     QPushButton, QComboBox
 from PySide2.QtGui import QIcon
-from sql.query import GET_RECEPTION_PATIENT, START_APPOINTMENT, END_APPOINTMENT, RECEPTION_CONTEXT, DIAGNOSIS_CONTEXT
+from sql.query import GET_RECEPTION_PATIENT, START_APPOINTMENT, END_APPOINTMENT, RECEPTION_CONTEXT, DIAGNOSIS_CONTEXT, \
+    MEDICATION_CONTEXT
 from const import proj_path, auth_user
-from custom import DiagnoseCustom, AnalysisCustom
+from custom import DiagnoseCustom, AnalysisCustom, MedicationCustom
 from docxtpl import DocxTemplate
 import os
 
@@ -34,6 +35,7 @@ class ReceptionWidget(QMainWindow):
         self.formWidget = QWidget()
         self.diagnoseWidget = DiagnoseCustom()
         self.analysisWidget = AnalysisCustom()
+        self.medicationWidget = MedicationCustom()
 
         # Patient
         self.patientWidget = QWidget()
@@ -76,6 +78,15 @@ class ReceptionWidget(QMainWindow):
         self.analysisBox.addWidget(self.analysisAddBtn)
         self.analysisBox.setAlignment(Qt.AlignLeft)
 
+        # Medication
+        self.medicationBox = QHBoxLayout()
+        self.medicationLabel = QLabel('Медикаменты:')
+        self.medicationAddBtn = QPushButton('Назначить медикаменты')
+        self.medicationAddBtn.setIcon(QIcon(str(proj_path / 'images/plus.png')))
+        self.medicationBox.addWidget(self.medicationLabel)
+        self.medicationBox.addWidget(self.medicationAddBtn)
+        self.medicationBox.setAlignment(Qt.AlignLeft)
+
         # Reception accept
         self.accept_btn = QPushButton('Начать прием')
         self.accept_btn.setFixedWidth(100)
@@ -91,6 +102,7 @@ class ReceptionWidget(QMainWindow):
         self.receptionWidgetBox.addRow(self.complaintBox)
         self.receptionWidgetBox.addRow(self.diagnosisBox)
         self.receptionWidgetBox.addRow(self.analysisBox)
+        self.receptionWidgetBox.addRow(self.medicationBox)
         self.receptionWidgetBox.addRow(self.print_result)
         self.receptionWidgetBox.addRow(self.end_btn)
         self.receptionWidget.setLayout(self.receptionWidgetBox)
@@ -119,6 +131,7 @@ class ReceptionWidget(QMainWindow):
         self.end_btn.clicked.connect(self.reception_end)
         self.diagnosisAddBtn.clicked.connect(self.diagnosis_w)
         self.analysisAddBtn.clicked.connect(self.analysis_w)
+        self.medicationAddBtn.clicked.connect(self.medication_w)
         self.print_result.clicked.connect(self.print_reception)
 
     def onload(self):
@@ -162,16 +175,22 @@ class ReceptionWidget(QMainWindow):
         widget.update_title(sender.text())
         widget.load(self.current_appointment_id, auth_user.specialist_id)
 
+    def medication_w(self):
+        sender = self.sender()
+        widget = self.medicationWidget
+        widget.update_title(sender.text())
+        widget.load(self.current_appointment_id)
+
     def print_reception(self):
         template = DocxTemplate(str(proj_path / 'templates/template_reception.docx'))
         context = self.db.exec_query(RECEPTION_CONTEXT, param=(self.current_appointment_id,), dictionary=True)[0]
         print(context)
         diag = self.db.exec_query(DIAGNOSIS_CONTEXT, param=(self.current_appointment_id, ))
+        medication = self.db.exec_query(MEDICATION_CONTEXT, param=(self.current_appointment_id, ))
         context['diag'] = []
-        context['therapy'] = []
+        context['therapy'] = medication
         for d in range(len(diag)):
             context['diag'].append(diag[d][0])
-            context['therapy'].append(diag[d][1])
         template.render(context=context)
         filename = str(proj_path / 'reception/reception.docx')
         template.save(filename)

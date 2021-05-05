@@ -3,7 +3,8 @@ from utils import get_stylesheet
 from database import DatabaseExecutor
 from PySide2.QtWidgets import QMainWindow, QLabel, QHBoxLayout, QLineEdit, QFormLayout, QWidget, \
     QPushButton, QDateEdit, QTableWidget, QHeaderView, QVBoxLayout, QComboBox, QTextEdit, QTableWidgetItem
-from sql.query import GET_TEL_TYPES, INSERT_CONTACTS, INSERT_DIAGNOSIS, ANALYSIS_CONTEXT, ANALYSIS_INSERT
+from sql.query import GET_TEL_TYPES, INSERT_CONTACTS, INSERT_DIAGNOSIS, ANALYSIS_CONTEXT, ANALYSIS_INSERT, \
+    GET_K_DIAGNOSIS_LIST, GET_K_ANALYSIS_LIST, GET_K_MEDICATIONS_LIST, MEDICATIONS_INSERT
 from docxtpl import DocxTemplate
 import os
 from const import proj_path
@@ -196,26 +197,20 @@ class DiagnoseCustom(QWidget):
     style = 'main.qss'
     db = DatabaseExecutor
     idx = None
+    diag_list = {}
 
     def __init__(self):
         QWidget.__init__(self)
         self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.WindowModal | Qt.ApplicationModal)
         self.formBox = QFormLayout()
         self.valueBox = QHBoxLayout()
-        self.valueLabel = QLabel('Введите данные диагноза:')
-        self.valueText = QTextEdit()
-        self.valueText.setFixedHeight(70)
+        self.valueLabel = QLabel('Назначить диагноз:')
+        self.valueText = QComboBox()
         self.valueBox.addWidget(self.valueLabel)
         self.valueBox.addWidget(self.valueText)
-        self.therapyBox = QHBoxLayout()
-        self.therapyLabel = QLabel('Введите терапевтические данные:')
-        self.therapy_value = QTextEdit()
-        self.therapyBox.addWidget(self.therapyLabel)
-        self.therapyBox.addWidget(self.therapy_value)
         self.valueBoxAccept = QPushButton('Сохранить')
         self.valueBoxAccept.setObjectName('SubmitBtn')
         self.formBox.addRow(self.valueBox)
-        self.formBox.addRow(self.therapyBox)
         self.formBox.addRow(self.valueBoxAccept)
         self.formBox.setAlignment(Qt.AlignLeft)
         self.formBox.setContentsMargins(20, 20, 20, 20)
@@ -224,7 +219,6 @@ class DiagnoseCustom(QWidget):
         self.setLayout(self.formBox)
         self.setMinimumSize(400, 400)
         self.setStyleSheet(get_stylesheet(self.style))
-
         self.valueBoxAccept.clicked.connect(self.save_data)
 
     def update_title(self, title):
@@ -233,14 +227,17 @@ class DiagnoseCustom(QWidget):
     def load(self, idx=None):
         self.show()
         self.valueText.clear()
-        self.therapy_value.clear()
         self.idx = idx
+        diagnosis_list = self.db.exec_query(GET_K_DIAGNOSIS_LIST)
+        for k, v in diagnosis_list:
+            self.diag_list[v] = k
+            self.valueText.addItem(v)
 
     def save_data(self):
-        if self.idx and self.valueText.toPlainText() != '' and self.therapy_value.toPlainText() != '':
-            q = self.db.exec_query(INSERT_DIAGNOSIS, param=(self.valueText.toPlainText(),
-                                                            self.idx,
-                                                            self.therapy_value.toPlainText()), retrieve_id=True)
+        if self.idx and self.valueText.currentText() != '':
+            q = self.db.exec_query(INSERT_DIAGNOSIS, param=(
+                self.diag_list.get(self.valueText.currentText()),
+                self.idx,), retrieve_id=True)
             if q:
                 self.close()
 
@@ -251,14 +248,15 @@ class AnalysisCustom(QWidget):
     db = DatabaseExecutor
     idx = None
     spec_id = None
+    analysis_list = {}
 
     def __init__(self):
         QWidget.__init__(self)
         self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.WindowModal | Qt.ApplicationModal)
         self.formBox = QFormLayout()
         self.valueBox = QHBoxLayout()
-        self.valueLabel = QLabel('Введите наименование анализа:')
-        self.valueText = QLineEdit()
+        self.valueLabel = QLabel('Назначить анализ:')
+        self.valueText = QComboBox()
         self.valueBox.addWidget(self.valueLabel)
         self.valueBox.addWidget(self.valueText)
         self.print_dest = QPushButton('Сохранить и распечатать направление')
@@ -282,14 +280,18 @@ class AnalysisCustom(QWidget):
         self.valueText.clear()
         self.idx = idx
         self.spec_id = spec_id
-        print(self.spec_id, self.idx)
+        analysis_list = self.db.exec_query(GET_K_ANALYSIS_LIST)
+        for k, v in analysis_list:
+            self.analysis_list[v] = k
+            self.valueText.addItem(v)
 
     def save_data(self):
 
-        self.db.exec_query(ANALYSIS_INSERT, param=(self.valueText.text(), self.spec_id, self.idx, ))
+        self.db.exec_query(ANALYSIS_INSERT, param=(
+            self.analysis_list.get(self.valueText.currentText()), self.spec_id, self.idx, ))
 
     def print_template(self):
-        if self.idx and self.valueText.text() != '':
+        if self.idx and self.valueText.currentText() != '':
             self.save_data()
             template = DocxTemplate(str(proj_path / 'templates/template_analysis.docx'))
             context = self.db.exec_query(ANALYSIS_CONTEXT, param=(self.idx,), dictionary=True)[0]
@@ -299,3 +301,61 @@ class AnalysisCustom(QWidget):
             os.startfile(filename, 'print')
         self.close()
 
+
+class MedicationCustom(QWidget):
+
+    style = 'main.qss'
+    db = DatabaseExecutor
+    idx = None
+    spec_id = None
+    medication_list = {}
+
+    def __init__(self):
+        QWidget.__init__(self)
+        self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.WindowModal | Qt.ApplicationModal)
+        self.formBox = QFormLayout()
+        self.valueBox = QHBoxLayout()
+        self.valueLabel = QLabel('Назначить медикаменты:')
+        self.valueText = QComboBox()
+        self.dosageBox = QHBoxLayout()
+        self.dosage_label = QLabel('Дозировка медикамента')
+        self.dosage_text = QTextEdit()
+        self.dosage_text.setMaximumHeight(100)
+        self.dosageBox.addWidget(self.dosage_label)
+        self.dosageBox.addWidget(self.dosage_text)
+        self.valueBox.addWidget(self.valueLabel)
+        self.valueBox.addWidget(self.valueText)
+        self.save_form = QPushButton('Сохранить')
+        self.save_form.setObjectName('SubmitBtn')
+        self.formBox.addRow(self.valueBox)
+        self.formBox.addRow(self.dosageBox)
+        self.formBox.addRow(self.save_form)
+        self.formBox.setAlignment(Qt.AlignLeft)
+        self.formBox.setContentsMargins(20, 20, 20, 20)
+        self.formBox.setVerticalSpacing(20)
+        self.formBox.setHorizontalSpacing(20)
+        self.setLayout(self.formBox)
+        self.setMinimumSize(400, 400)
+        self.setStyleSheet(get_stylesheet(self.style))
+        self.save_form.clicked.connect(self.save_data)
+
+    def update_title(self, title):
+        self.setWindowTitle(title)
+
+    def load(self, idx=None):
+        self.show()
+        self.valueText.clear()
+        self.dosage_text.clear()
+        self.idx = idx
+        medication_list = self.db.exec_query(GET_K_MEDICATIONS_LIST)
+        for k, v in medication_list:
+            self.medication_list[v] = k
+            self.valueText.addItem(v)
+
+    def save_data(self):
+        q = self.db.exec_query(MEDICATIONS_INSERT, param=(
+            self.medication_list.get(self.valueText.currentText()),
+            self.dosage_text.toPlainText() or 'согласно инструкции препарата', self.idx, ),
+                               retrieve_id=True)
+        if q:
+            self.close()

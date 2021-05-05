@@ -125,21 +125,23 @@ END_APPOINTMENT = """
 UPDATE appointment SET end_time = current_timestamp WHERE id = %s
 """
 
-GET_DIAGNOSIS_LIST = """
+"""
+GET_DIAGNOSIS_LIST = 
 SELECT value FROM diagnosis WHERE appointment_id = %s ORDER BY id
 """
 
 INSERT_DIAGNOSIS = """
-INSERT INTO diagnosis(value, appointment_id, therapy_value) VALUES (%s, %s, %s)
+INSERT INTO diagnosis(diagnosis_id, appointment_id) VALUES (%s, %s)
 """
 
 ANALYSIS_INSERT = """
-INSERT INTO analysis (value, req_spec_id, appointment_id) VALUES (%s, %s, %s)
+INSERT INTO analysis (analysis_id, req_spec_id, appointment_id) VALUES (%s, %s, %s)
 """
 
 ANALYSIS_CONTEXT = """
-SELECT a.value, CONCAT(d.surname, ' ', d.name, ' ', d.patronymic) as doctor,
+SELECT ka.analysis_value as value, CONCAT(d.surname, ' ', d.name, ' ', d.patronymic) as doctor,
        CONCAT(p.surname, ' ', p.name, ' ', p.patronymic) as patient, p.b_date as patient_b_date FROM analysis a
+INNER JOIN k_analysis ka on a.analysis_id = ka.id
 INNER JOIN specialist s on a.req_spec_id = s.id
 INNER JOIN doctor d on s.doctor_id = d.id
 INNER JOIN appointment a2 on a.appointment_id = a2.id
@@ -178,5 +180,30 @@ WHERE a.id = %s
 """
 
 DIAGNOSIS_CONTEXT = """
-SELECT value, therapy_value FROM diagnosis WHERE appointment_id = %s
+SELECT kd.diagnosis_value FROM diagnosis d 
+INNER JOIN k_diagnosis kd on d.diagnosis_id = kd.id
+WHERE d.appointment_id = %s
+"""
+
+GET_K_DIAGNOSIS_LIST = """
+SELECT id, diagnosis_value FROM k_diagnosis ORDER BY diagnosis_value
+"""
+
+GET_K_ANALYSIS_LIST = """
+SELECT id, analysis_value FROM k_analysis ORDER BY analysis_value
+"""
+
+GET_K_MEDICATIONS_LIST = """
+SELECT id, medication_value FROM k_medications ORDER BY medication_value
+"""
+
+MEDICATIONS_INSERT = """
+INSERT INTO medication (medication_id, dosage, appointment_id) VALUES (%s, %s, %s) 
+"""
+
+MEDICATION_CONTEXT = """
+SELECT km.medication_value, m.dosage FROM medication m
+INNER JOIN k_medications km
+ON m.medication_id = km.id
+WHERE m.appointment_id = %s
 """
