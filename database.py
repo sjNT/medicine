@@ -19,4 +19,4 @@ class DatabaseExecutor:
         return data
 
 
-db = mc.connect(user='tusur', password='ImXAaJRqvrI8r3r', host='109.123.144.99', port='3306', database='medicine')
+db = mc.connect(user='tusur', password='ImXAaJRqvrI8r3r', host='127.0.0.1', port='3306', database='medicine')
